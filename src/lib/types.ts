@@ -1,4 +1,4 @@
-export type Gender = 'male' | 'female' | 'other'
+export type Gender = 'male' | 'female'
 export type QuestType = 'daily' | 'weekly' | 'life'
 export type QuestDifficulty = 'easy' | 'normal' | 'hard' | 'big'
 export type VerificationType = 'photo' | 'text' | 'timer' | 'none'

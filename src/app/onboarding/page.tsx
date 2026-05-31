@@ -156,8 +156,8 @@ export default function OnboardingPage() {
         <div className="flex-1 animate-fade-in" key={step}>
           {step === 1 && (
             <StepWrapper title="안녕하세요." subtitle="성별을 알려주세요.">
-              <div className="grid grid-cols-3 gap-3 mt-8">
-                {(['male', 'female', 'other'] as Gender[]).map((g) => (
+              <div className="grid grid-cols-2 gap-3 mt-8">
+                {(['male', 'female'] as Gender[]).map((g) => (
                   <button
                     key={g}
                     onClick={() => setForm((f) => ({ ...f, gender: g }))}
@@ -167,9 +167,9 @@ export default function OnboardingPage() {
                         : 'border-stone-200 bg-white'
                     }`}
                   >
-                    <span className="text-2xl">{g === 'male' ? '🙋‍♂️' : g === 'female' ? '🙋‍♀️' : '🙋'}</span>
+                    <span className="text-2xl">{g === 'male' ? '🙋‍♂️' : '🙋‍♀️'}</span>
                     <span className="text-sm font-medium text-stone-700">
-                      {g === 'male' ? '남성' : g === 'female' ? '여성' : '기타'}
+                      {g === 'male' ? '남성' : '여성'}
                     </span>
                   </button>
                 ))}
