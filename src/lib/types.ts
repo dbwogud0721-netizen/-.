@@ -4,8 +4,8 @@ export type QuestDifficulty = 'easy' | 'normal' | 'hard' | 'big'
 export type VerificationType = 'photo' | 'text' | 'timer' | 'none'
 export type MatchStatus = 'pending' | 'accepted' | 'rejected'
 export type Mood = '좋아요' | '평온해요' | '멍해요' | '외로워요' | '슬퍼요' | '화나요' | '불안해요'
-export type RelationshipGoal = '가벼운 대화' | '위로' | '새로운 설렘' | '진지한 관계'
-export type Vibe = '다정한' | '차분한' | '밝은' | '자기관리하는' | '공감 잘하는' | '웃긴'
+export type RelationshipGoal = string
+export type Vibe = string
 export type CurrentState = '멍하다' | '외롭다' | '다시 시작하고 싶다' | '그냥 대화가 필요하다'
 
 export interface UserProfile {

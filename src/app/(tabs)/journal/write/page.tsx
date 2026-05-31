@@ -61,7 +61,7 @@ function JournalWriteInner() {
   }
 
   const handleSave = async () => {
-    if (!mood || content.trim().length < 5 || saving) return
+    if (!mood || content.trim().length < 50 || saving) return
     setSaving(true)
 
     const aiFeedback = await getJournalFeedback(mood, content)
@@ -105,9 +105,9 @@ function JournalWriteInner() {
         right={
           <button
             onClick={handleSave}
-            disabled={!mood || content.trim().length < 5 || saving}
+            disabled={!mood || content.trim().length < 50 || saving}
             className={`text-sm font-semibold ${
-              mood && content.trim().length >= 5 && !saving
+              mood && content.trim().length >= 50 && !saving
                 ? 'text-coral-500'
                 : 'text-stone-300'
             }`}
@@ -196,9 +196,9 @@ function JournalWriteInner() {
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-5 pb-8 pt-4 bg-cream">
         <button
           onClick={handleSave}
-          disabled={!mood || content.trim().length < 5 || saving}
+          disabled={!mood || content.trim().length < 50 || saving}
           className={`w-full h-14 rounded-2xl text-base font-semibold transition-all ${
-            mood && content.trim().length >= 5 && !saving
+            mood && content.trim().length >= 50 && !saving
               ? saved ? 'bg-coral-500 text-white' : 'bg-stone-900 text-white'
               : 'bg-stone-200 text-stone-400 cursor-not-allowed'
           }`}
@@ -210,6 +210,9 @@ function JournalWriteInner() {
             </span>
           ) : saved ? '저장됨 ✓' : '기록하기'}
         </button>
+        {mood && content.trim().length < 50 && content.length > 0 && (
+          <p className="text-xs text-stone-400 text-center mt-2">{50 - content.trim().length}자 더 적어주세요.</p>
+        )}
         {!mood && <p className="text-xs text-stone-400 text-center mt-2">감정을 먼저 선택해주세요.</p>}
       </div>
     </div>

@@ -37,7 +37,12 @@ export default function MatchPage() {
     setMatches(m)
     if (p) {
       setFilteredProfiles(
-        DUMMY_PROFILES.filter((dp) => dp.age >= p.preferredMinAge && dp.age <= p.preferredMaxAge)
+        DUMMY_PROFILES.filter(
+          (dp) =>
+            dp.age >= p.preferredMinAge &&
+            dp.age <= p.preferredMaxAge &&
+            dp.gender !== p.gender
+        )
       )
     }
   }
@@ -135,29 +140,42 @@ export default function MatchPage() {
           ) : (
             <>
               {/* Swipe card */}
-              <div className="card overflow-hidden animate-scale-in" key={currentProfile.id}>
-                {/* Profile photo area */}
+              <div className="rounded-3xl overflow-hidden shadow-lg animate-scale-in" key={currentProfile.id}>
+                {/* Profile photo area — full gradient */}
                 <div
-                  className="h-64 flex items-center justify-center relative"
-                  style={{ backgroundColor: currentProfile.avatarColor + '22' }}
+                  className="h-72 flex flex-col items-center justify-end pb-6 relative"
+                  style={{
+                    background: `linear-gradient(160deg, ${currentProfile.avatarColor}dd 0%, ${currentProfile.avatarColor}88 60%, ${currentProfile.avatarColor}33 100%)`,
+                  }}
                 >
+                  {/* Big avatar letter centered */}
                   <div
-                    className="w-28 h-28 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg"
-                    style={{ backgroundColor: currentProfile.avatarColor }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-32 h-32 rounded-full flex items-center justify-center text-white font-black text-6xl shadow-xl"
+                    style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', border: '3px solid rgba(255,255,255,0.3)' }}
                   >
                     {currentProfile.name.charAt(0)}
                   </div>
+
                   {/* Level badge */}
-                  <div className="absolute top-3 right-3 bg-coral-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                    Lv.{currentProfile.level}
+                  <div className="absolute top-4 right-4 bg-white bg-opacity-90 text-coral-600 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    👑 Lv.{currentProfile.level}
                   </div>
-                  {/* Index indicator */}
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1">
-                    {browsable.slice(0, Math.min(browsable.length, 5)).map((_, i) => (
+
+                  {/* Name overlay at bottom */}
+                  <div className="w-full px-5 relative z-10">
+                    <h2 className="text-2xl font-black text-white drop-shadow-md">
+                      {currentProfile.name}, {currentProfile.age}
+                    </h2>
+                    <p className="text-sm text-white opacity-80 mt-0.5 drop-shadow-sm">{currentProfile.location}</p>
+                  </div>
+
+                  {/* Dot indicators */}
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                    {browsable.slice(0, Math.min(browsable.length, 6)).map((_, i) => (
                       <div
                         key={i}
-                        className={`h-1 rounded-full transition-all ${
-                          i === currentIndex % 5 ? 'w-5 bg-coral-500' : 'w-1.5 bg-stone-300'
+                        className={`h-1 rounded-full transition-all bg-white ${
+                          i === currentIndex % 6 ? 'w-5 opacity-100' : 'w-1.5 opacity-40'
                         }`}
                       />
                     ))}
@@ -165,28 +183,20 @@ export default function MatchPage() {
                 </div>
 
                 {/* Profile info */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h2 className="text-xl font-bold text-stone-900">
-                        {currentProfile.name}, {currentProfile.age}
-                      </h2>
-                      <p className="text-sm text-stone-400 mt-0.5">{currentProfile.location}</p>
-                    </div>
-                    <div className="flex flex-col gap-1 items-end">
-                      <span className="text-xs bg-coral-50 text-coral-600 font-semibold px-2 py-0.5 rounded-full">
-                        이별 {calculateBreakupDays(currentProfile.breakupDate)}일째
-                      </span>
-                      <span className="text-xs bg-stone-100 text-stone-500 font-medium px-2 py-0.5 rounded-full">
-                        {currentProfile.relationshipGoal}
-                      </span>
-                    </div>
+                <div className="bg-white px-5 pt-4 pb-2">
+                  <div className="flex gap-2 mb-3">
+                    <span className="text-xs bg-coral-50 text-coral-600 font-bold px-2.5 py-1 rounded-full">
+                      이별 {calculateBreakupDays(currentProfile.breakupDate)}일째
+                    </span>
+                    <span className="text-xs bg-stone-100 text-stone-500 font-medium px-2.5 py-1 rounded-full">
+                      {currentProfile.relationshipGoal}
+                    </span>
                   </div>
 
                   <p className="text-sm text-stone-600 leading-relaxed mb-3">{currentProfile.bio}</p>
 
                   {currentProfile.interests.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1.5 mb-2">
                       {currentProfile.interests.map((i) => (
                         <span key={i} className="text-xs text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-100">
                           #{i}
@@ -197,35 +207,38 @@ export default function MatchPage() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="px-5 pb-5 flex items-center justify-center gap-6">
+                <div className="bg-white px-5 pb-5 pt-3 flex items-center justify-center gap-5">
                   <button
                     onClick={handlePass}
-                    className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center shadow-sm transition-transform active:scale-95"
+                    className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center shadow-md transition-transform active:scale-90"
                   >
-                    <X size={24} className="text-stone-500" />
+                    <X size={26} className="text-stone-500" />
                   </button>
                   <button
                     onClick={handlePass}
-                    className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shadow-sm transition-transform active:scale-95"
+                    className="w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-transform active:scale-90"
+                    style={{ background: 'linear-gradient(135deg, #FCD34D, #F59E0B)' }}
                   >
-                    <Star size={20} className="text-yellow-500" />
+                    <Star size={20} className="text-white" fill="white" />
                   </button>
                   <button
                     onClick={handleLike}
                     disabled={progress.contactCredits <= 0}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-95 ${
-                      progress.contactCredits > 0 ? 'bg-coral-500' : 'bg-stone-200'
+                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-transform active:scale-90 ${
+                      progress.contactCredits > 0
+                        ? 'bg-gradient-to-br from-coral-400 to-coral-600'
+                        : 'bg-stone-200'
                     }`}
                   >
-                    <Heart size={24} className="text-white" />
+                    <Heart size={26} className="text-white" fill="white" />
                   </button>
                 </div>
 
                 {progress.contactCredits <= 0 && (
-                  <div className="mx-5 mb-5 bg-stone-50 rounded-xl p-3 text-center">
-                    <p className="text-xs text-stone-500">연락 보내기 횟수가 부족해요</p>
+                  <div className="bg-white mx-0 pb-4 text-center">
+                    <p className="text-xs text-stone-400">연락 보내기 횟수 부족</p>
                     <Link href="/my/shop">
-                      <p className="text-xs font-bold text-coral-500 mt-1">충전하기 →</p>
+                      <p className="text-xs font-bold text-coral-500 mt-0.5">충전하기 →</p>
                     </Link>
                   </div>
                 )}

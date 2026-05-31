@@ -19,13 +19,14 @@ type FormData = {
   preferredMaxAge: string
   currentState: CurrentState | null
   preferredVibes: Vibe[]
+  customVibe: string
   relationshipGoal: RelationshipGoal | null
   bio: string
 }
 
-const VIBES: Vibe[] = ['다정한', '차분한', '밝은', '자기관리하는', '공감 잘하는', '웃긴']
+const VIBES: Vibe[] = ['다정한', '차분한', '밝은', '자기관리하는', '공감 잘하는', '웃긴', '진지한', '열정적인', '감성적인', '독립적인', '배려하는', '성장하는']
 const STATES: CurrentState[] = ['멍하다', '외롭다', '다시 시작하고 싶다', '그냥 대화가 필요하다']
-const GOALS: RelationshipGoal[] = ['가벼운 대화', '위로', '새로운 설렘', '진지한 관계']
+const GOALS: RelationshipGoal[] = ['가벼운 대화', '위로', '새로운 설렘', '진지한 관계', '친구 같은 관계', '천천히 알아가기', '일상 공유', '성장 동반자']
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -40,6 +41,7 @@ export default function OnboardingPage() {
     preferredMaxAge: '35',
     currentState: null,
     preferredVibes: [],
+    customVibe: '',
     relationshipGoal: null,
     bio: '',
   })
@@ -56,7 +58,7 @@ export default function OnboardingPage() {
       case 5: return form.breakupDate !== ''
       case 6: return parseInt(form.preferredMinAge) < parseInt(form.preferredMaxAge)
       case 7: return form.currentState !== null
-      case 8: return form.preferredVibes.length > 0
+      case 8: return form.preferredVibes.length > 0 || form.customVibe.trim().length > 0
       case 9: return form.relationshipGoal !== null
       case 10: return form.bio.trim().length >= 10
       default: return false
@@ -90,7 +92,7 @@ export default function OnboardingPage() {
       interests: [],
       preferredMinAge: parseInt(form.preferredMinAge),
       preferredMaxAge: parseInt(form.preferredMaxAge),
-      preferredVibes: form.preferredVibes,
+      preferredVibes: form.customVibe.trim() ? [...form.preferredVibes, form.customVibe.trim()] : form.preferredVibes,
       relationshipGoal: form.relationshipGoal,
       currentState: form.currentState,
       createdAt: new Date().toISOString(),
@@ -343,17 +345,28 @@ export default function OnboardingPage() {
                   </button>
                 ))}
               </div>
+              <div className="mt-4">
+                <p className="text-xs text-stone-400 mb-2">직접 입력 (기타)</p>
+                <input
+                  type="text"
+                  value={form.customVibe}
+                  onChange={(e) => setForm((f) => ({ ...f, customVibe: e.target.value }))}
+                  placeholder="예: 독서 좋아하는, 운동하는"
+                  maxLength={20}
+                  className="w-full h-12 bg-white border-2 border-stone-200 rounded-2xl px-4 text-sm text-stone-900 placeholder-stone-300 focus:outline-none focus:border-coral-400 transition-colors"
+                />
+              </div>
             </StepWrapper>
           )}
 
           {step === 9 && (
             <StepWrapper title="지금 필요한 게" subtitle="뭔가요?">
-              <div className="mt-8 space-y-3">
+              <div className="mt-8 grid grid-cols-2 gap-3">
                 {GOALS.map((goal) => (
                   <button
                     key={goal}
                     onClick={() => setForm((f) => ({ ...f, relationshipGoal: goal }))}
-                    className={`w-full h-14 rounded-2xl px-5 text-left text-base font-medium border-2 transition-all ${
+                    className={`h-14 rounded-2xl px-4 text-sm font-medium border-2 transition-all ${
                       form.relationshipGoal === goal
                         ? 'border-coral-500 bg-coral-50 text-coral-600'
                         : 'border-stone-200 bg-white text-stone-700'

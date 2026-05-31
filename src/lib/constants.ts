@@ -21,7 +21,7 @@ export const DAILY_QUEST_TEMPLATES: QuestTemplate[] = [
     type: 'daily',
     difficulty: 'easy',
     xp: 10,
-    verificationType: 'text',
+    verificationType: 'none',
   },
   {
     id: 'daily-walk',
@@ -49,7 +49,7 @@ export const DAILY_QUEST_TEMPLATES: QuestTemplate[] = [
     type: 'daily',
     difficulty: 'easy',
     xp: 10,
-    verificationType: 'text',
+    verificationType: 'none',
   },
   {
     id: 'daily-compliment',
@@ -58,7 +58,7 @@ export const DAILY_QUEST_TEMPLATES: QuestTemplate[] = [
     type: 'daily',
     difficulty: 'easy',
     xp: 10,
-    verificationType: 'text',
+    verificationType: 'none',
   },
   {
     id: 'daily-meal',
@@ -67,7 +67,7 @@ export const DAILY_QUEST_TEMPLATES: QuestTemplate[] = [
     type: 'daily',
     difficulty: 'easy',
     xp: 10,
-    verificationType: 'text',
+    verificationType: 'none',
   },
   {
     id: 'daily-sleep',
@@ -76,7 +76,7 @@ export const DAILY_QUEST_TEMPLATES: QuestTemplate[] = [
     type: 'daily',
     difficulty: 'easy',
     xp: 10,
-    verificationType: 'text',
+    verificationType: 'none',
   },
 ]
 
