@@ -186,7 +186,7 @@ export default function EditProfilePage() {
           </Field>
           <Field label="성별">
             <div className="flex gap-2">
-              {(['male', 'female', 'other'] as const).map((g) => (
+              {(['male', 'female'] as const).map((g) => (
                 <button
                   key={g}
                   onClick={() => setForm((f) => ({ ...f, gender: g }))}
@@ -194,7 +194,7 @@ export default function EditProfilePage() {
                     form.gender === g ? 'border-coral-500 bg-coral-50 text-coral-600' : 'border-stone-200 bg-stone-50 text-stone-600'
                   }`}
                 >
-                  {g === 'male' ? '남성' : g === 'female' ? '여성' : '기타'}
+                  {g === 'male' ? '남성' : '여성'}
                 </button>
               ))}
             </div>
