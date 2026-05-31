@@ -26,16 +26,16 @@ export default function TabBar() {
               href={href}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors"
             >
-              <Icon
-                size={22}
-                className={isActive ? 'text-coral-500' : 'text-stone-400'}
-                strokeWidth={isActive ? 2.2 : 1.8}
-              />
-              <span
-                className={`text-[10px] font-medium ${
-                  isActive ? 'text-coral-500' : 'text-stone-400'
-                }`}
-              >
+              <div className={`w-9 h-9 rounded-2xl flex items-center justify-center transition-all ${
+                isActive ? 'bg-coral-50' : ''
+              }`}>
+                <Icon
+                  size={20}
+                  className={isActive ? 'text-coral-500' : 'text-stone-400'}
+                  strokeWidth={isActive ? 2.4 : 1.8}
+                />
+              </div>
+              <span className={`text-[9px] font-bold ${isActive ? 'text-coral-500' : 'text-stone-400'}`}>
                 {label}
               </span>
             </Link>

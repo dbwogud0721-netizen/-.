@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Mail, ShoppingBag, CheckCircle2, Clock } from 'lucide-react'
+import { X, Heart, Star, ShoppingBag, CheckCircle2, Clock } from 'lucide-react'
 import { profileStorage, progressStorage, matchStorage, chatStorage } from '@/lib/storage'
 import { calculateBreakupDays, getLevelConfig } from '@/lib/utils'
 import { DUMMY_PROFILES, LEVELS } from '@/lib/constants'
@@ -11,13 +11,8 @@ import type { UserProfile, UserProgress, DummyProfile, Match } from '@/lib/types
 function ProfileAvatar({ profile, size = 80 }: { profile: DummyProfile; size?: number }) {
   return (
     <div
-      className="rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: profile.avatarColor,
-        fontSize: size * 0.35,
-      }}
+      className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+      style={{ width: size, height: size, backgroundColor: profile.avatarColor, fontSize: size * 0.38 }}
     >
       {profile.name.charAt(0)}
     </div>
@@ -30,6 +25,7 @@ export default function MatchPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [filteredProfiles, setFilteredProfiles] = useState<DummyProfile[]>([])
   const [activeTab, setActiveTab] = useState<'browse' | 'requests'>('browse')
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
 
   const reload = () => {
@@ -39,12 +35,10 @@ export default function MatchPage() {
     setMyProfile(p)
     setProgress(prog)
     setMatches(m)
-
     if (p) {
-      const filtered = DUMMY_PROFILES.filter(
-        (dp) => dp.age >= p.preferredMinAge && dp.age <= p.preferredMaxAge
+      setFilteredProfiles(
+        DUMMY_PROFILES.filter((dp) => dp.age >= p.preferredMinAge && dp.age <= p.preferredMaxAge)
       )
-      setFilteredProfiles(filtered)
     }
   }
 
@@ -63,16 +57,10 @@ export default function MatchPage() {
 
   const handleAcceptSimulate = (matchId: string, targetId: string) => {
     matchStorage.accept(matchId)
-    // Create chat room
     const existingChat = chatStorage.getByMatchId(matchId)
-    if (!existingChat) {
-      chatStorage.create(matchId, targetId)
-    }
+    if (!existingChat) chatStorage.create(matchId, targetId)
     reload()
   }
-
-  const pendingMatches = matches.filter((m) => m.status === 'pending')
-  const acceptedMatches = matches.filter((m) => m.status === 'accepted')
 
   if (!mounted || !myProfile || !progress) {
     return (
@@ -83,80 +71,170 @@ export default function MatchPage() {
   }
 
   const matchedIds = new Set(matches.map((m) => m.targetProfileId))
+  const pendingMatches = matches.filter((m) => m.status === 'pending')
+  const acceptedMatches = matches.filter((m) => m.status === 'accepted')
+  const browsable = filteredProfiles.filter((p) => !matchedIds.has(p.id))
+  const currentProfile = browsable[currentIndex]
+
+  const handlePass = () => setCurrentIndex((i) => i + 1)
+  const handleLike = () => {
+    if (currentProfile) {
+      handleSendContact(currentProfile.id)
+    }
+    setCurrentIndex((i) => i + 1)
+  }
 
   return (
     <div className="pb-6">
       {/* Header */}
-      <div className="px-5 pt-6 mb-5">
-        <h1 className="text-xl font-semibold text-stone-900">매칭</h1>
-        <p className="text-sm text-stone-500 mt-1">회복하는 사람들을 만나보세요.</p>
-      </div>
-
-      {/* Credits bar */}
-      <div className="mx-5 mb-5 bg-white rounded-2xl p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Mail size={18} className="text-coral-400" />
-          <span className="text-sm font-medium text-stone-700">연락 보내기 {progress.contactCredits}회 남음</span>
-        </div>
-        <Link href="/my/shop">
-          <div className="flex items-center gap-1 text-xs text-stone-500">
-            <ShoppingBag size={14} />
-            <span>충전</span>
+      <div className="px-5 pt-6 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-stone-900">매칭</h1>
+            <p className="text-sm text-stone-400 mt-0.5">회복하는 사람들을 만나보세요</p>
           </div>
-        </Link>
+          <Link href="/my/shop">
+            <div className="flex items-center gap-1.5 bg-coral-50 rounded-full px-3 py-1.5">
+              <ShoppingBag size={13} className="text-coral-500" />
+              <span className="text-xs font-bold text-coral-600">{progress.contactCredits}회</span>
+            </div>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex px-5 gap-2 mb-5">
-        <button
-          onClick={() => setActiveTab('browse')}
-          className={`flex-1 h-10 rounded-xl text-sm font-medium transition-all ${
-            activeTab === 'browse' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200'
-          }`}
-        >
-          탐색
-        </button>
-        <button
-          onClick={() => setActiveTab('requests')}
-          className={`flex-1 h-10 rounded-xl text-sm font-medium transition-all relative ${
-            activeTab === 'requests' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200'
-          }`}
-        >
-          요청 현황
-          {pendingMatches.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-coral-500 rounded-full text-white text-[10px] flex items-center justify-center">
-              {pendingMatches.length}
-            </span>
-          )}
-        </button>
+        {(['browse', 'requests'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 h-10 rounded-full text-xs font-bold transition-all relative ${
+              activeTab === tab
+                ? 'bg-coral-500 text-white shadow-sm'
+                : 'bg-white text-stone-500 border border-stone-200'
+            }`}
+          >
+            {tab === 'browse' ? '탐색' : '요청 현황'}
+            {tab === 'requests' && pendingMatches.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[9px] flex items-center justify-center font-bold">
+                {pendingMatches.length}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {activeTab === 'browse' && (
-        <div className="px-5 space-y-4">
-          {filteredProfiles.length === 0 ? (
-            <div className="text-center py-16 text-stone-400">
-              <p className="text-sm">조건에 맞는 프로필이 없어요.</p>
-              <p className="text-xs mt-1">선호 나이 범위를 변경해보세요.</p>
+        <div className="px-5">
+          {browsable.length === 0 || !currentProfile ? (
+            <div className="card p-8 text-center">
+              <p className="text-2xl mb-3">✨</p>
+              <p className="text-sm font-semibold text-stone-900 mb-1">모든 프로필을 봤어요</p>
+              <p className="text-xs text-stone-400">선호 나이 범위를 변경하거나 나중에 다시 확인해보세요.</p>
             </div>
           ) : (
-            filteredProfiles.map((profile) => {
-              const match = matches.find((m) => m.targetProfileId === profile.id)
-              const levelConfig = LEVELS.find((l) => l.level === profile.level) ?? LEVELS[0]
-              const breakupDays = calculateBreakupDays(profile.breakupDate)
+            <>
+              {/* Swipe card */}
+              <div className="card overflow-hidden animate-scale-in" key={currentProfile.id}>
+                {/* Profile photo area */}
+                <div
+                  className="h-64 flex items-center justify-center relative"
+                  style={{ backgroundColor: currentProfile.avatarColor + '22' }}
+                >
+                  <div
+                    className="w-28 h-28 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg"
+                    style={{ backgroundColor: currentProfile.avatarColor }}
+                  >
+                    {currentProfile.name.charAt(0)}
+                  </div>
+                  {/* Level badge */}
+                  <div className="absolute top-3 right-3 bg-coral-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    Lv.{currentProfile.level}
+                  </div>
+                  {/* Index indicator */}
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1">
+                    {browsable.slice(0, Math.min(browsable.length, 5)).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1 rounded-full transition-all ${
+                          i === currentIndex % 5 ? 'w-5 bg-coral-500' : 'w-1.5 bg-stone-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
 
-              return (
-                <MatchCard
-                  key={profile.id}
-                  profile={profile}
-                  match={match}
-                  levelConfig={levelConfig}
-                  breakupDays={breakupDays}
-                  contactCredits={progress.contactCredits}
-                  onSendContact={() => handleSendContact(profile.id)}
-                  onAccept={() => match && handleAcceptSimulate(match.id, profile.id)}
-                />
-              )
-            })
+                {/* Profile info */}
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h2 className="text-xl font-bold text-stone-900">
+                        {currentProfile.name}, {currentProfile.age}
+                      </h2>
+                      <p className="text-sm text-stone-400 mt-0.5">{currentProfile.location}</p>
+                    </div>
+                    <div className="flex flex-col gap-1 items-end">
+                      <span className="text-xs bg-coral-50 text-coral-600 font-semibold px-2 py-0.5 rounded-full">
+                        이별 {calculateBreakupDays(currentProfile.breakupDate)}일째
+                      </span>
+                      <span className="text-xs bg-stone-100 text-stone-500 font-medium px-2 py-0.5 rounded-full">
+                        {currentProfile.relationshipGoal}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-stone-600 leading-relaxed mb-3">{currentProfile.bio}</p>
+
+                  {currentProfile.interests.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {currentProfile.interests.map((i) => (
+                        <span key={i} className="text-xs text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-100">
+                          #{i}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="px-5 pb-5 flex items-center justify-center gap-6">
+                  <button
+                    onClick={handlePass}
+                    className="w-14 h-14 rounded-full bg-stone-100 flex items-center justify-center shadow-sm transition-transform active:scale-95"
+                  >
+                    <X size={24} className="text-stone-500" />
+                  </button>
+                  <button
+                    onClick={handlePass}
+                    className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center shadow-sm transition-transform active:scale-95"
+                  >
+                    <Star size={20} className="text-yellow-500" />
+                  </button>
+                  <button
+                    onClick={handleLike}
+                    disabled={progress.contactCredits <= 0}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-95 ${
+                      progress.contactCredits > 0 ? 'bg-coral-500' : 'bg-stone-200'
+                    }`}
+                  >
+                    <Heart size={24} className="text-white" />
+                  </button>
+                </div>
+
+                {progress.contactCredits <= 0 && (
+                  <div className="mx-5 mb-5 bg-stone-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-stone-500">연락 보내기 횟수가 부족해요</p>
+                    <Link href="/my/shop">
+                      <p className="text-xs font-bold text-coral-500 mt-1">충전하기 →</p>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-center text-xs text-stone-400 mt-3">
+                {currentIndex + 1} / {browsable.length}명
+              </p>
+            </>
           )}
         </div>
       )}
@@ -164,202 +242,77 @@ export default function MatchPage() {
       {activeTab === 'requests' && (
         <div className="px-5 space-y-4">
           {pendingMatches.length === 0 && acceptedMatches.length === 0 ? (
-            <div className="text-center py-16 text-stone-400">
-              <p className="text-sm">아직 보낸 연락이 없어요.</p>
-              <p className="text-xs mt-1">탐색 탭에서 먼저 연락을 보내보세요.</p>
+            <div className="card p-8 text-center">
+              <p className="text-2xl mb-3">💌</p>
+              <p className="text-sm font-semibold text-stone-900 mb-1">아직 보낸 연락이 없어요</p>
+              <p className="text-xs text-stone-400">탐색 탭에서 마음에 드는 분께 먼저 연락해보세요.</p>
             </div>
           ) : (
             <>
               {pendingMatches.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-stone-500 mb-3">수락 대기 중</p>
-                  {pendingMatches.map((match) => {
-                    const profile = DUMMY_PROFILES.find((p) => p.id === match.targetProfileId)
-                    if (!profile) return null
-                    return (
-                      <PendingCard
-                        key={match.id}
-                        profile={profile}
-                        match={match}
-                        onAccept={() => handleAcceptSimulate(match.id, profile.id)}
-                      />
-                    )
-                  })}
+                  <p className="text-xs font-bold text-stone-400 mb-3">수락 대기 중</p>
+                  <div className="space-y-2.5">
+                    {pendingMatches.map((match) => {
+                      const profile = DUMMY_PROFILES.find((p) => p.id === match.targetProfileId)
+                      if (!profile) return null
+                      return (
+                        <div key={match.id} className="card p-4 flex items-center gap-3">
+                          <ProfileAvatar profile={profile} size={48} />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-stone-900">{profile.name}, {profile.age}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Clock size={11} className="text-stone-400" />
+                              <span className="text-xs text-stone-400">수락 대기 중</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleAcceptSimulate(match.id, profile.id)}
+                            className="h-8 px-3 bg-stone-100 text-stone-500 rounded-xl text-xs font-medium"
+                          >
+                            수락 시뮬
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
               {acceptedMatches.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-stone-500 mb-3">수락됨</p>
-                  {acceptedMatches.map((match) => {
-                    const profile = DUMMY_PROFILES.find((p) => p.id === match.targetProfileId)
-                    if (!profile) return null
-                    const chat = chatStorage.getByMatchId(match.id)
-                    return (
-                      <div key={match.id} className="bg-white rounded-2xl p-4 flex items-center gap-3">
-                        <ProfileAvatar profile={profile} size={48} />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-stone-900">{profile.name}, {profile.age}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <CheckCircle2 size={12} className="text-coral-500" />
-                            <span className="text-xs text-coral-500">연결됨</span>
+                  <p className="text-xs font-bold text-stone-400 mb-3">연결됨</p>
+                  <div className="space-y-2.5">
+                    {acceptedMatches.map((match) => {
+                      const profile = DUMMY_PROFILES.find((p) => p.id === match.targetProfileId)
+                      if (!profile) return null
+                      const chat = chatStorage.getByMatchId(match.id)
+                      return (
+                        <div key={match.id} className="card p-4 flex items-center gap-3">
+                          <ProfileAvatar profile={profile} size={48} />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-stone-900">{profile.name}, {profile.age}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <CheckCircle2 size={11} className="text-coral-500" />
+                              <span className="text-xs text-coral-500 font-medium">연결됨</span>
+                            </div>
                           </div>
+                          {chat && (
+                            <Link href={`/chat/${chat.id}`}>
+                              <button className="h-9 px-4 bg-coral-500 text-white rounded-xl text-xs font-bold shadow-sm">
+                                채팅
+                              </button>
+                            </Link>
+                          )}
                         </div>
-                        {chat && (
-                          <Link href={`/chat/${chat.id}`}>
-                            <button className="h-9 px-4 bg-stone-900 text-white rounded-xl text-xs font-medium">
-                              채팅
-                            </button>
-                          </Link>
-                        )}
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </>
           )}
         </div>
       )}
-    </div>
-  )
-}
-
-function MatchCard({
-  profile,
-  match,
-  levelConfig,
-  breakupDays,
-  contactCredits,
-  onSendContact,
-  onAccept,
-}: {
-  profile: DummyProfile
-  match: Match | undefined
-  levelConfig: { name: string; level: number }
-  breakupDays: number
-  contactCredits: number
-  onSendContact: () => void
-  onAccept: () => void
-}) {
-  const chat = match?.status === 'accepted' ? chatStorage.getByMatchId(match?.id ?? '') : null
-
-  return (
-    <div className="bg-white rounded-2xl overflow-hidden">
-      {/* Top: avatar + basic info */}
-      <div className="p-5">
-        <div className="flex items-start gap-4">
-          <ProfileAvatar profile={profile} size={72} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-base font-semibold text-stone-900">{profile.name}, {profile.age}</h3>
-                <p className="text-xs text-stone-500 mt-0.5">{profile.location}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
-                이별 {breakupDays}일째
-              </span>
-              <span className="text-xs bg-coral-50 text-coral-600 px-2 py-0.5 rounded-full">
-                Lv.{levelConfig.level} {levelConfig.name}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-sm text-stone-600 mt-4 leading-relaxed">{profile.bio}</p>
-
-        {/* Recent quests */}
-        {profile.completedQuestTitles.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {profile.completedQuestTitles.slice(0, 2).map((t) => (
-              <span key={t} className="text-xs bg-stone-50 text-stone-500 px-2.5 py-1 rounded-full border border-stone-100">
-                ✓ {t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Interests */}
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {profile.interests.map((i) => (
-            <span key={i} className="text-xs text-stone-400 bg-stone-50 px-2.5 py-1 rounded-full">
-              #{i}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom action */}
-      <div className="border-t border-stone-100 p-4">
-        {!match && (
-          <button
-            onClick={onSendContact}
-            disabled={contactCredits <= 0}
-            className={`w-full h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
-              contactCredits > 0
-                ? 'bg-stone-900 text-white'
-                : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-            }`}
-          >
-            <Mail size={16} />
-            {contactCredits > 0 ? '연락 보내기' : '연락 보내기 횟수 부족'}
-          </button>
-        )}
-
-        {match?.status === 'pending' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-center gap-2 text-stone-500 py-1">
-              <Clock size={14} />
-              <span className="text-sm">상대 수락 대기 중</span>
-            </div>
-            <button
-              onClick={onAccept}
-              className="w-full h-9 rounded-xl border border-stone-200 text-xs text-stone-500 font-medium"
-            >
-              [개발용] 수락 시뮬레이션
-            </button>
-          </div>
-        )}
-
-        {match?.status === 'accepted' && chat && (
-          <Link href={`/chat/${chat.id}`}>
-            <button className="w-full h-11 rounded-xl bg-coral-500 text-white text-sm font-semibold flex items-center justify-center gap-2">
-              <CheckCircle2 size={16} />
-              채팅하기
-            </button>
-          </Link>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function PendingCard({
-  profile,
-  match,
-  onAccept,
-}: {
-  profile: DummyProfile
-  match: Match
-  onAccept: () => void
-}) {
-  return (
-    <div className="bg-white rounded-2xl p-4 flex items-center gap-3 mb-3">
-      <ProfileAvatar profile={profile} size={48} />
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-stone-900">{profile.name}, {profile.age}</p>
-        <div className="flex items-center gap-1 mt-0.5">
-          <Clock size={12} className="text-stone-400" />
-          <span className="text-xs text-stone-400">수락 대기 중</span>
-        </div>
-      </div>
-      <button
-        onClick={onAccept}
-        className="h-9 px-4 bg-stone-100 text-stone-600 rounded-xl text-xs font-medium"
-      >
-        수락 시뮬레이션
-      </button>
     </div>
   )
 }
